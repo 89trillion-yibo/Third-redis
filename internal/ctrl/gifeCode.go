@@ -53,9 +53,12 @@ func GetGifcode(c *gin.Context) {
 		data, err := model.HashGetAll(gifcode)
 		//获取领取列表信息
 		receive, err := model.HashGetAll(gifcode + ":receive")
+		//获取已领取次数
+		bytime, err := model.StringGet(gifcode + ":Bytime")
 		gifeAndReceive := make(map[string]interface{})
 		gifeAndReceive["gifeInfo"] = data
 		gifeAndReceive["receiveInfo"] = receive
+		gifeAndReceive["bytimeInfo"] = bytime
 		if err!=nil {
 			c.JSON(http.StatusBadGateway,gifeerror.Error.WithData(err))
 		}
