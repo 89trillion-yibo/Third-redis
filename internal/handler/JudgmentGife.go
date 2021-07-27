@@ -32,7 +32,7 @@ func Judgment(id string, gifcode string) (bool, string) {
 		ids := model.HasHashKay(gifcode + ":receive")
 		fmt.Println("ids>>>>>>>>>>>>>",ids)
 		switch Type {
-		//第一类兑换码：看切片ids中是否含有该用户id，如果有说明已经领取过，没有的话则返回true,并添加用户至redis标记为已领取
+		//第一类兑换码：仅限领取一次
 		case "1":
 			stringGet, _ := model.StringGet(gifcode + ":Bytime")
 			if stringGet == "1" {
@@ -44,7 +44,7 @@ func Judgment(id string, gifcode string) (bool, string) {
 			//自增1
 			model.Incr(gifcode + ":Bytime")
 			return true,""
-		//第二类兑换码：限制次数兑换，看领取次数是否还大于1，如果小于则领取次数不足
+		//第二类兑换码：限制次数兑换，根据已领取次数判断是否可以领取
 		case "2":
 			AllowedTimes := model.HashGet(gifcode, "AllowedTimes")
 			Bytime, _ := model.StringGet(gifcode + ":Bytime")
