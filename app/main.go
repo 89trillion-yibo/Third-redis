@@ -2,17 +2,15 @@ package main
 
 import (
 	"awesomeProject/Testthird/app/http"
-
-	"awesomeProject/Testthird/utils"
+	"awesomeProject/Testthird/internal/model"
 
 	"fmt"
-
 )
 
 func main() {
 
 	//初始化redis
-	err := utils.RedisCli("127.0.0.1:6379")
+	err := model.RedisCli("127.0.0.1:6379")
 	if err != nil {
 		fmt.Println(err)
 	}

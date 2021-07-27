@@ -2,16 +2,15 @@ package ctrl
 
 import (
 	"awesomeProject/Testthird/internal/gifeerror"
+	"awesomeProject/Testthird/internal/handler"
 	"awesomeProject/Testthird/internal/model"
-	"awesomeProject/Testthird/internal/service"
-	"awesomeProject/Testthird/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 )
-
+//创建礼品码
 func CreateCode(c *gin.Context)  {
 
 	//接收参数
@@ -23,7 +22,7 @@ func CreateCode(c *gin.Context)  {
 	gold, g := c.GetPostForm("gold")
 	diamond, h := c.GetPostForm("diamond")
 	//判断是否有参数
-	if !a && !b && !d && !e && !f && !g && !h {
+	if !a || !b || !d || !e || !f || !g || !h {
 		c.JSON(http.StatusBadRequest,gifeerror.Parameters)
 	}else {
 		//将string转成int
@@ -36,45 +35,63 @@ func CreateCode(c *gin.Context)  {
 		marshal, _ := json.Marshal(s)
 		pack := string(marshal)
 		//创建礼品码
-		careatGif, code := service.CareatGif(giftype, des, alltime, valTime, pack, createName)
-		fmt.Println("code:",code)
+		careatGif, mapdate := handler.CareatGif(giftype, des, alltime, valTime, pack, createName)
+		fmt.Println("code:",mapdate)
 
 		c.JSON(http.StatusOK,gifeerror.OK.WithData(careatGif))	
 	}
 }
 
+//查询礼品码
 func GetGifcode(c *gin.Context) {
 	//接收参数
 	gifcode, a := c.GetPostForm("gifcode")
-	if !a {
+	if !a || gifcode == "" {
 		c.JSON(http.StatusBadRequest,gifeerror.Parameters)
 	}else {
-		get, err := utils.HashGetAll(gifcode)
+		//获取礼品码信息
+		data, err := model.HashGetAll(gifcode)
+		//获取领取列表信息
+		receive, err := model.HashGetAll(gifcode + ":receive")
+		gifeAndReceive := make(map[string]interface{})
+		gifeAndReceive["gifeInfo"] = data
+		gifeAndReceive["receiveInfo"] = receive
 		if err!=nil {
 			c.JSON(http.StatusBadGateway,gifeerror.Error.WithData(err))
 		}
-		c.JSON(http.StatusOK,gifeerror.OK.WithData(get))
+		c.JSON(http.StatusOK,gifeerror.OK.WithData(gifeAndReceive))
 	}
 
 }
 
+//用户增加奖励
 func IncreGife(c *gin.Context) {
 	id,a := c.GetPostForm("id")
 	gifcode,b := c.GetPostForm("gifcode")
-	if !a && !b {
+	if !a || !b || id == "" || gifcode == "" {
 		c.JSON(http.StatusBadRequest,gifeerror.Parameters)
 	}else {
 		//判断礼品码是否合法以及用户是否有资格领取
-		judgment, err := service.Judgment(id, gifcode)
-		if judgment && err == nil {
-			increase := service.Increase(gifcode, id)
-			/*get := redisdo.HashGet(gifcode, "Pack")
+		judgment, code := handler.Judgment(id, gifcode)
+		if judgment{
+			increase := handler.Increase(gifcode, id)
+			/*get := utils.HashGet(gifcode, "Pack")
 			bytes := []byte(get)
 			tmp := make(map[string]interface{})
-			json.Unmarshal(bytes, &tmp)*/
+			json.Unmarshal(bytes, &tmp)
+			fmt.Println(tmp)*/
 			c.JSON(http.StatusOK,gifeerror.OK.WithData(increase))
 		}else {
-			c.JSON(http.StatusBadGateway,gifeerror.Exchange)
+			switch code {
+			case "102":
+				c.JSON(http.StatusBadRequest,gifeerror.Exchange)
+			case "103":
+				c.JSON(http.StatusBadRequest,gifeerror.Expired)
+			case "104":
+				c.JSON(http.StatusBadRequest,gifeerror.Exhausted)
+			case "105":
+				c.JSON(http.StatusBadRequest,gifeerror.AlreadyReceived)
+			}
 		}
 	}
 }

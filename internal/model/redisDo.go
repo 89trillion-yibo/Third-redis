@@ -1,4 +1,4 @@
-package utils
+package model
 
 import (
 	"errors"
@@ -25,7 +25,7 @@ func RedisCli(httpport string) (error)  {
 	return nil
 }
 
-//往redis存入
+//往redis存入map类型
 func HashSet(key string, mapData map[string]interface{}) (bool, error) {
 	//参数验证
 	if key == "" || mapData == nil {
@@ -45,7 +45,21 @@ func HashSet(key string, mapData map[string]interface{}) (bool, error) {
 	}
 }
 
-//从redis中取所有
+//往redis存入string类型
+func StringSet(key string, value int) (bool, error) {
+	//参数验证
+	if key == "" {
+		return false,errors.New("参数为空")
+	}
+	if err := RedisClient.Set(key, value, 0).Err();err!=nil{
+		fmt.Println(err)
+		return false, errors.New("添加失败")
+	}else {
+		return true,nil
+	}
+}
+
+//从redis中取map所有
 func HashGetAll(key string) (interface{},error){
 	//参数非空判断
 	if key == "" {
@@ -56,6 +70,19 @@ func HashGetAll(key string) (interface{},error){
 		return "",errors.New("key不存在")
 	}else if err!= nil {
 		return "",errors.New("获取失败")
+	}
+	return value,nil
+}
+
+//从redis中取string类型值
+func StringGet(key string) (string,error) {
+	//参数非空判断
+	if key == "" {
+		return "",errors.New("参数为空")
+	}
+	value,err := RedisClient.Get(key).Result()
+	if err != nil{
+		fmt.Println(err)
 	}
 	return value,nil
 }
@@ -101,10 +128,20 @@ func HasHashKay(keyname string) []string {
 }
 
 //redis中map修改值
-func ValueUpdate(key string, field string, newvalue interface{}) (bool,error) {
-	result, err := RedisClient.HSet(key, field, newvalue).Result()
+func ValueUpdate(key string, field string, newvalue interface{}) (error) {
+	_, err := RedisClient.HSet(key, field, newvalue).Result()
+	if err!=nil{
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+//redis中原子增加操作
+func Incr(key string) (int64) {
+	result, err := RedisClient.Incr(key).Result()
 	if err!=nil{
 		fmt.Println(err)
 	}
-	return result,nil
+	return result
 }

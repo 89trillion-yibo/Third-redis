@@ -1,7 +1,7 @@
-package service
+package handler
 
 import (
-	"awesomeProject/Testthird/utils"
+	"awesomeProject/Testthird/internal/model"
 	"fmt"
 	"math/rand"
 	"time"
@@ -29,18 +29,24 @@ func CareatGif(gifType int, des string, allowTime int, valTime string, pack stri
 	mapdate["Type"] = gifType
 	mapdate["Description"] = des
 	mapdate["AllowedTimes"] = allowTime
-	mapdate["ValidPeriod"] = time.Now().Add(duration)
+	mapdate["ValidPeriod"] = time.Now().Add(duration).Unix()
 	mapdate["Pack"] = pack
 	mapdate["CreateName"] = createName
-	mapdate["CreateTime"] = time.Now()
-	mapdate["ByTime"] = 0
+	mapdate["CreateTime"] = time.Now().Unix()
+	//mapdate["ByTime"] = 0
 
 	//生成8位随机数
 	randomCode := GetRandomString(8)
 
 	//存入redis
-	_, err := utils.HashSet(randomCode, mapdate)
+	_, err := model.HashSet(randomCode, mapdate)
 	if err!=nil {
+		fmt.Println(err)
+	}
+
+	//创建已领取次数
+	setBool, err := model.StringSet(randomCode+":Bytime", 0)
+	if err!=nil || !setBool{
 		fmt.Println(err)
 	}
 

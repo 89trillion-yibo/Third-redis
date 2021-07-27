@@ -6,6 +6,9 @@ var (
 
 	Parameters = response(101,"获取参数错误")
 	Exchange = response(102,"兑换错误")
+	Expired = response(103,"兑换码过期")
+	Exhausted = response(104,"领取码次数用尽")
+	AlreadyReceived = response(105,"该用户重复领取")
 
 )
 
