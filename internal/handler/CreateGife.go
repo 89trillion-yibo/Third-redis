@@ -38,6 +38,18 @@ func CareatGif(gifType int, des string, allowTime int, valTime string, pack stri
 	//生成8位随机数
 	randomCode := GetRandomString(8)
 
+	//判断redis中是否已随机经生成过该礼品码
+	if model.HasKey(randomCode){
+		for  {
+			NewrandomCode := GetRandomString(8)
+			if model.HasKey(NewrandomCode){
+				continue
+			}
+			randomCode = NewrandomCode
+			break
+		}
+	}
+
 	//存入redis
 	_, err := model.HashSet(randomCode, mapdate)
 	if err!=nil {
